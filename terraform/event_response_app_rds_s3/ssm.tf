@@ -26,9 +26,8 @@ resource "aws_ssm_parameter" "admin_password" {
 }
 
 resource "aws_ssm_parameter" "rds_password" {
-  count  = (var.rds_endpoint != "" && var.rds_password != "") ? 1 : 0
   name   = "/ecs/${var.environment}-${local.app_name}/RDS_PASSWORD"
   type   = "SecureString"
-  value  = var.rds_password
+  value  = random_password.rds.result
   tags   = merge(var.tags, { Name = "/ecs/${var.environment}-${local.app_name}/RDS_PASSWORD" })
 }

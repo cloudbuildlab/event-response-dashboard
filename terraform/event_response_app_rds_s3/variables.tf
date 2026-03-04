@@ -60,33 +60,46 @@ variable "web_port" {
   default     = 8080
 }
 
-# External RDS (PostgreSQL)
-variable "rds_endpoint" {
-  description = "RDS instance endpoint (hostname). Leave empty to omit RDS env vars."
+# Managed RDS (PostgreSQL)
+variable "rds_instance_class" {
+  description = "RDS instance class (e.g. db.t3.micro)."
   type        = string
-  default     = ""
+  default     = "db.t3.micro"
 }
-variable "rds_port" {
-  type    = number
-  default = 5432
+variable "rds_allocated_storage" {
+  description = "Allocated storage in GB."
+  type        = number
+  default     = 20
 }
-variable "rds_database" {
-  type    = string
-  default = ""
+variable "rds_engine_version" {
+  description = "PostgreSQL engine version (e.g. 15 or 16)."
+  type        = string
+  default     = "16"
 }
-variable "rds_username" {
-  type    = string
-  default = ""
+variable "rds_database_name" {
+  description = "Name of the default database to create."
+  type        = string
+  default     = "appdb"
 }
-variable "rds_password" {
-  type      = string
-  default   = ""
-  sensitive = true
+variable "rds_master_username" {
+  description = "Master username for the RDS instance."
+  type        = string
+  default     = "appuser"
+}
+variable "rds_multi_az" {
+  description = "Deploy RDS in Multi-AZ."
+  type        = bool
+  default     = false
 }
 
-# External S3
-variable "s3_bucket_name" {
-  description = "S3 bucket name for app storage. Leave empty to omit S3 env and IAM."
+# Managed S3
+variable "s3_bucket_prefix" {
+  description = "Prefix for the managed S3 bucket name (bucket = prefix-environment-app_name-account_id)."
   type        = string
-  default     = ""
+  default     = "event-response"
+}
+variable "s3_force_destroy" {
+  description = "Allow destroying the bucket even if it has objects (use with care)."
+  type        = bool
+  default     = false
 }

@@ -45,16 +45,16 @@ locals {
     } : {}
   )
 
-  web_rds_env = var.rds_endpoint != "" ? [
-    { name = "RDS_HOST", value = var.rds_endpoint },
-    { name = "RDS_PORT", value = tostring(var.rds_port) },
-    { name = "RDS_DATABASE", value = var.rds_database },
-    { name = "RDS_USER", value = var.rds_username }
-  ] : []
+  web_rds_env = [
+    { name = "RDS_HOST", value = aws_db_instance.this.address },
+    { name = "RDS_PORT", value = tostring(aws_db_instance.this.port) },
+    { name = "RDS_DATABASE", value = aws_db_instance.this.db_name },
+    { name = "RDS_USER", value = aws_db_instance.this.username }
+  ]
 
-  web_s3_env = var.s3_bucket_name != "" ? [
-    { name = "S3_BUCKET", value = var.s3_bucket_name }
-  ] : []
+  web_s3_env = [
+    { name = "S3_BUCKET", value = local.s3_bucket_name }
+  ]
 
   web_container = {
     name       = "web"
@@ -88,9 +88,7 @@ locals {
         { name = "FASTSCHEMA_ADMIN_USER", valueFrom = aws_ssm_parameter.admin_username[0].arn },
         { name = "FASTSCHEMA_ADMIN_PASS", valueFrom = aws_ssm_parameter.admin_password[0].arn }
       ] : [],
-      (var.rds_endpoint != "" && var.rds_password != "") ? [
-        { name = "RDS_PASSWORD", valueFrom = aws_ssm_parameter.rds_password[0].arn }
-      ] : []
+      [{ name = "RDS_PASSWORD", valueFrom = aws_ssm_parameter.rds_password.arn }]
     )
     healthCheck = {
       command     = ["CMD-SHELL", "wget -q --spider http://127.0.0.1:${var.web_port}/health || exit 1"]

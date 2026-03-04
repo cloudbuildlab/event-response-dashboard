@@ -17,12 +17,14 @@ web_port          = 8080
 # Optional: event schema (default = base64-encoded event schema so the app works without creating it in the FastSchema dashboard)
 # fastschema_event_schema_b64 = "..."  # set to "" to create the schema manually in the dashboard
 
-# External RDS (PostgreSQL). Omit or leave empty to disable.
-# rds_endpoint   = "mydb.xxxxx.ap-southeast-2.rds.amazonaws.com"
-# rds_port       = 5432
-# rds_database   = "appdb"
-# rds_username   = "appuser"
-# rds_password   = "..."
+# Managed RDS (PostgreSQL) - created by this stack
+# rds_instance_class    = "db.t3.micro"
+# rds_allocated_storage = 20
+# rds_engine_version    = "16"
+# rds_database_name     = "appdb"
+# rds_master_username   = "appuser"
+# rds_multi_az          = false
 
-# External S3 bucket. Omit or leave empty to disable.
-# s3_bucket_name = "my-app-bucket"
+# Managed S3 - created by this stack
+# s3_bucket_prefix   = "event-response"
+# s3_force_destroy   = false
