@@ -1,3 +1,7 @@
+# -----------------------------------------------------------------------------
+# CloudWatch Logs
+# -----------------------------------------------------------------------------
+
 resource "aws_cloudwatch_log_group" "fastschema" {
   name              = "/ecs/${var.environment}-${local.app_name}-fastschema"
   retention_in_days = 1

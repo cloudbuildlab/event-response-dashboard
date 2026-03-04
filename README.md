@@ -2,13 +2,12 @@
 
 Centralized dashboard for managing and responding to operational events.
 
-This repo has **two Terraform stacks** (separate state, apply from each subfolder) and a **Go consumer app**:
+This repo has **two Terraform stacks** (separate state, apply from each subfolder):
 
 | Path | Description |
 |------|-------------|
 | `terraform/fastschema/` | R&D stack: FastSchema only, own ALB, IP-restricted. |
-| `terraform/event_response_app/` | Event response stack: one ECS task with **FastSchema + Go web app**; separate ALB; web app does CRUD against FastSchema. |
-| `app/` | Go web app (CRUD demo on FastSchema `event` resource). No auth. Build from here for `event_response_app`’s `web_image`. |
+| `terraform/event_response_app/` | Event response stack: one ECS task with **FastSchema + Go web app**; separate ALB; web container uses `ghcr.io/platformfuzz/event-response-image:latest`. |
 
 ---
 
@@ -34,36 +33,22 @@ Variables: `ecs_cluster_arn`, `vpc_id`, `private_subnet_ids`, `public_subnet_ids
 
 ### 2. Event response app — `terraform/event_response_app/`
 
-One ECS task with two containers: **FastSchema** (backend) and **Go web app** (consumer). ALB targets the web container; the Go app calls FastSchema at `http://localhost:8000`.
+One ECS task with two containers: **FastSchema** (backend) and **Go web app** (consumer). ALB targets the web container; the web app uses the published image `ghcr.io/platformfuzz/event-response-image:latest` and calls FastSchema at `http://localhost:8000`.
 
-1. **Build the Go app image** (from repo root):
-   ```bash
-   cd app
-   docker build -t event-response-app:latest .
-   ```
-   Push to your registry (e.g. ECR) and set `web_image` in `terraform.tfvars`.
+**Apply the stack:**
 
-2. **Apply the stack:**
-   ```bash
-   cd terraform/event_response_app
-   cp terraform.tfvars.example terraform.tfvars   # edit: web_image, VPC, cluster, etc.
-   terraform init
-   terraform plan -out=tfplan
-   terraform apply tfplan
-   ```
+```bash
+cd terraform/event_response_app
+cp terraform.tfvars.example terraform.tfvars   # edit: VPC, cluster, etc.
+terraform init
+terraform plan -out=tfplan
+terraform apply tfplan
+```
+
+The web container image defaults to `ghcr.io/platformfuzz/event-response-image:latest`. Override with `web_image` in `terraform.tfvars` if needed.
 
 Outputs: `web_url` (ALB URL for the Go app), `log_group_fastschema`, `log_group_web`.
 
-**FastSchema in this stack:** Create an **event** schema in the FastSchema dashboard (e.g. fields: `title`, `description`) so the Go app’s CRUD calls work. Optional: set `fastschema_admin_username` / `fastschema_admin_password` (and optionally `fastschema_app_key`) in tfvars; the task runs `fastschema setup` at start.
+**FastSchema in this stack:** Create an **event** schema in the FastSchema dashboard (e.g. fields: `title`, `description`) so the web app's CRUD calls work. Optional: set `fastschema_admin_username` / `fastschema_admin_password` (and optionally `fastschema_app_key`) in tfvars; the task runs `fastschema setup` at start.
 
----
-
-## Go consumer app (`app/`)
-
-Minimal CRUD UI for a single FastSchema resource (`event`: title, description). No authentication.
-
-- **Run locally:** With FastSchema on port 8000, run `FASTSCHEMA_URL=http://localhost:8000 go run .` in `app/`; open http://localhost:8080.
-- **Build for ECS:** `docker build -t your-registry/event-response-app:latest app/`; push and set `web_image` in `terraform/event_response_app/terraform.tfvars`.
-- **Env:** `FASTSCHEMA_URL` (default `http://localhost:8000`), `PORT` (default `8080`). In ECS, the task definition sets `FASTSCHEMA_URL=http://localhost:8000`.
-
-See `app/README.md` for details.
+**Web app source and image:** Built and published from [platformfuzz/event-response-image](https://github.com/platformfuzz/event-response-image). Use that repo for local dev (Docker Compose) and CI/CD.

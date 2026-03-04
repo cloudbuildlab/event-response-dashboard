@@ -1,3 +1,6 @@
+# -----------------------------------------------------------------------------
+# Outputs
+# -----------------------------------------------------------------------------
 output "web_url" {
   description = "URL to the Go web app (event response dashboard)."
   value       = "http://${aws_lb.app.dns_name}"

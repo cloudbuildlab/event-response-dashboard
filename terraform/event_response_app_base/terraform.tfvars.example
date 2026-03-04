@@ -5,11 +5,14 @@ public_subnet_ids  = ["subnet-aaa", "subnet-bbb"]
 environment       = "dev"
 desired_count     = 1
 
-# Image built from app/ (e.g. docker build -t event-response-app:latest app/ then push to ECR)
-web_image         = "ACCOUNT.dkr.ecr.REGION.amazonaws.com/event-response-app:latest"
+# Web app image (default: published image from platformfuzz/event-response-image)
+# web_image       = "ghcr.io/platformfuzz/event-response-image:latest"
 web_port          = 8080
 
 # Optional: FastSchema secrets (same as fastschema stack)
 # fastschema_app_key        = "..."
 # fastschema_admin_username = "admin"
 # fastschema_admin_password = "..."
+
+# Optional: event schema (default = base64-encoded event schema so the app works without creating it in the FastSchema dashboard)
+# fastschema_event_schema_b64 = "..."  # set to "" to create the schema manually in the dashboard

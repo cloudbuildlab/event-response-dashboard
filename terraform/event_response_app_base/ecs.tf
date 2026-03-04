@@ -1,3 +1,6 @@
+# -----------------------------------------------------------------------------
+# ECS Task Definition and Service
+# -----------------------------------------------------------------------------
 resource "aws_ecs_task_definition" "app" {
   family                   = "${var.environment}-${local.app_name}"
   network_mode             = "awsvpc"

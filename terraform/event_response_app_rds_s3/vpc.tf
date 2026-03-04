@@ -1,6 +1,9 @@
+# -----------------------------------------------------------------------------
+# Security Groups (VPC-scoped networking)
+# -----------------------------------------------------------------------------
 resource "aws_security_group" "alb" {
   name        = "${var.environment}-${local.app_name}-alb"
-  description = "ALB for event-response-app"
+  description = "ALB for ${local.app_name}"
   vpc_id      = var.vpc_id
   tags        = merge(var.tags, { Name = "${var.environment}-${local.app_name}-alb" })
   ingress {
@@ -35,5 +38,16 @@ resource "aws_security_group" "tasks" {
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
+  }
+  # Explicit egress for RDS when using external RDS. Ensure the RDS security group allows inbound from this SG on port 5432.
+  dynamic "egress" {
+    for_each = var.rds_endpoint != "" ? [1] : []
+    content {
+      from_port   = var.rds_port
+      to_port     = var.rds_port
+      protocol    = "tcp"
+      cidr_blocks = ["0.0.0.0/0"]
+      description = "RDS PostgreSQL"
+    }
   }
 }
