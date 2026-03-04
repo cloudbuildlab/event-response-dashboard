@@ -3,16 +3,17 @@
 # -----------------------------------------------------------------------------
 resource "aws_security_group" "alb" {
   count       = var.enable_alb ? 1 : 0
-  name        = "fastschema-alb-${var.environment}"
+  name        = "${var.environment}-fastschema-alb"
   description = "ALB for FastSchema"
   vpc_id      = var.vpc_id
+  tags        = merge(var.tags, { Name = "${var.environment}-fastschema-alb" })
 
   ingress {
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "HTTP"
+    cidr_blocks = [local.my_public_ip_cidr]
+    description = "HTTP from deployer IP only"
   }
 
   egress {
@@ -24,13 +25,14 @@ resource "aws_security_group" "alb" {
 }
 
 resource "aws_security_group" "tasks" {
-  name        = "fastschema-tasks-${var.environment}"
+  name        = "${var.environment}-fastschema-tasks"
   description = "FastSchema ECS tasks"
   vpc_id      = var.vpc_id
+  tags        = merge(var.tags, { Name = "${var.environment}-fastschema-tasks" })
 
   ingress {
-    from_port       = 8000
-    to_port         = 8000
+    from_port       = var.app_port
+    to_port         = var.app_port
     protocol        = "tcp"
     security_groups = var.enable_alb ? [aws_security_group.alb[0].id] : []
     cidr_blocks     = var.enable_alb ? [] : ["0.0.0.0/0"]

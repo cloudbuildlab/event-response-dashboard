@@ -64,7 +64,6 @@ ehthumbs.db
 Thumbs.db
 
 # Ignore IDE files
-.vscode/
 .idea/
 *.swp
 *.swo
