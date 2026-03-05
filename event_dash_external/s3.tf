@@ -1,19 +1,12 @@
 # -----------------------------------------------------------------------------
-# S3 bucket - fully managed
+# S3 bucket
 # -----------------------------------------------------------------------------
-
-resource "random_id" "s3_suffix" {
-  byte_length = 4
-}
-
-locals {
-  s3_bucket_name = "${var.s3_bucket_prefix}-${var.environment}-${local.app_name}-${data.aws_caller_identity.current.account_id}-${random_id.s3_suffix.hex}"
-}
 
 resource "aws_s3_bucket" "app" {
   bucket        = local.s3_bucket_name
-  force_destroy = var.s3_force_destroy
-  tags          = merge(var.tags, { Name = local.s3_bucket_name })
+  force_destroy = var.force_destroy
+
+  tags = merge(var.tags, { Name = local.s3_bucket_name })
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "app" {

@@ -1,7 +1,10 @@
 # -----------------------------------------------------------------------------
-# Local values (container definitions, env wiring for RDS/S3)
+# Local values
 # -----------------------------------------------------------------------------
 locals {
+  my_public_ip_cidr = "${trimspace(data.http.my_public_ip.response_body)}/32"
+  app_name          = "event-dash-auth"
+
   fastschema_container = merge(
     {
       name      = "fastschema"
@@ -45,21 +48,10 @@ locals {
     } : {}
   )
 
-  web_rds_env = [
-    { name = "RDS_HOST", value = aws_db_instance.this.address },
-    { name = "RDS_PORT", value = tostring(aws_db_instance.this.port) },
-    { name = "RDS_DATABASE", value = aws_db_instance.this.db_name },
-    { name = "RDS_USER", value = aws_db_instance.this.username }
-  ]
-
-  web_s3_env = [
-    { name = "S3_BUCKET", value = local.s3_bucket_name }
-  ]
-
   web_container = {
-    name       = "web"
-    image      = var.web_image
-    essential  = true
+    name      = "web"
+    image     = var.web_image
+    essential = true
     dependsOn = [{ containerName = "fastschema", condition = "HEALTHY" }]
     portMappings = [{
       containerPort = var.web_port
@@ -80,16 +72,15 @@ locals {
         { name = "FASTSCHEMA_URL", value = "http://localhost:8000" },
         { name = "PORT", value = tostring(var.web_port) }
       ],
-      local.web_rds_env,
-      local.web_s3_env
+      [
+        { name = "COGNITO_USER_POOL_ID", value = aws_cognito_user_pool.this.id },
+        { name = "AWS_REGION", value = data.aws_region.current.id }
+      ]
     )
-    secrets = concat(
-      (var.fastschema_admin_username != "" && var.fastschema_admin_password != "") ? [
-        { name = "FASTSCHEMA_ADMIN_USER", valueFrom = aws_ssm_parameter.admin_username[0].arn },
-        { name = "FASTSCHEMA_ADMIN_PASS", valueFrom = aws_ssm_parameter.admin_password[0].arn }
-      ] : [],
-      [{ name = "RDS_PASSWORD", valueFrom = aws_ssm_parameter.rds_password.arn }]
-    )
+    secrets = (var.fastschema_admin_username != "" && var.fastschema_admin_password != "") ? [
+      { name = "FASTSCHEMA_ADMIN_USER", valueFrom = aws_ssm_parameter.admin_username[0].arn },
+      { name = "FASTSCHEMA_ADMIN_PASS", valueFrom = aws_ssm_parameter.admin_password[0].arn }
+    ] : []
     healthCheck = {
       command     = ["CMD-SHELL", "wget -q --spider http://127.0.0.1:${var.web_port}/health || exit 1"]
       interval    = 30

@@ -3,7 +3,7 @@
 # -----------------------------------------------------------------------------
 locals {
   my_public_ip_cidr = "${trimspace(data.http.my_public_ip.response_body)}/32"
-  app_name          = "minimal"
+  app_name          = "event-dash"
 
   fastschema_container = merge(
     {

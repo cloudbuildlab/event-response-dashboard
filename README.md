@@ -2,12 +2,14 @@
 
 Centralized dashboard for managing and responding to operational events.
 
-This repo has **two Terraform stacks** (separate state, apply from each subfolder):
+This repo has **Terraform stacks** (separate state, apply from each subfolder):
 
 | Path | Description |
 |------|-------------|
-| `terraform/fastschema/` | R&D stack: FastSchema only, own ALB, IP-restricted. |
-| `terraform/event_response_app/` | Event response stack: one ECS task with **FastSchema + Go web app**; separate ALB; web container uses `ghcr.io/platformfuzz/event-response-image:latest`. |
+| `fastschema/` | R&D stack: FastSchema only, own ALB, IP-restricted. |
+| `event_dash/` | Event dashboard: FastSchema + consumer sidecar; own ALB, IP-restricted. |
+| `event_dash_external/` | Event dashboard with RDS + S3; FastSchema + web consumer, external data stores. |
+| `event_response_app/` | Event response stack: one ECS task with **FastSchema + Go web app**; separate ALB; web container uses `ghcr.io/platformfuzz/event-response-image:latest`. |
 
 ---
 
@@ -16,12 +18,12 @@ This repo has **two Terraform stacks** (separate state, apply from each subfolde
 - **Prerequisites:** Existing ECS cluster (EC2), VPC with private and public subnets, Terraform >= 1.5, AWS provider >= 4.0.
 - **No shared root:** Run `terraform init` and `terraform apply` from **each** stack directory.
 
-### 1. FastSchema (R&D) — `terraform/fastschema/`
+### 1. FastSchema (R&D) — `fastschema/`
 
 Single FastSchema service, optional ALB, IP-restricted ingress.
 
 ```bash
-cd terraform/fastschema
+cd fastschema
 terraform init
 terraform plan -out=tfplan
 terraform apply tfplan
@@ -31,14 +33,14 @@ Variables: `ecs_cluster_arn`, `vpc_id`, `private_subnet_ids`, `public_subnet_ids
 
 **Web UI password:** FastSchema has no env-based admin creation. Use the **setup URL** from task logs (CloudWatch log group from `terraform output log_group_name`): look for `Visit the following URL to setup the app: .../dash/setup/?token=...` and open that path on your ALB host. If you set `fastschema_admin_username` and `fastschema_admin_password`, the task runs `fastschema setup` at start so you can log in with those credentials.
 
-### 2. Event response app — `terraform/event_response_app/`
+### 2. Event response app — `event_response_app/`
 
 One ECS task with two containers: **FastSchema** (backend) and **Go web app** (consumer). ALB targets the web container; the web app uses the published image `ghcr.io/platformfuzz/event-response-image:latest` and calls FastSchema at `http://localhost:8000`.
 
 **Apply the stack:**
 
 ```bash
-cd terraform/event_response_app
+cd event_response_app
 cp terraform.tfvars.example terraform.tfvars   # edit: VPC, cluster, etc.
 terraform init
 terraform plan -out=tfplan

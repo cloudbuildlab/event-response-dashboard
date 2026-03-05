@@ -8,10 +8,6 @@ data "http" "my_public_ip" {
   url = "https://checkip.amazonaws.com/"
 }
 
-# -----------------------------------------------------------------------------
-# Local values
-# -----------------------------------------------------------------------------
-locals {
-  my_public_ip_cidr = "${trimspace(data.http.my_public_ip.response_body)}/32"
-  app_name          = "rds-s3"
+resource "random_id" "s3_suffix" {
+  byte_length = 4
 }

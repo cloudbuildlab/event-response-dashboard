@@ -20,7 +20,7 @@ resource "aws_ecs_service" "app" {
   desired_count   = var.desired_count
   launch_type     = "EC2"
   tags            = merge(var.tags, { Name = "${var.environment}-${local.app_name}" })
-  depends_on      = [aws_lb_listener.app]
+  depends_on      = [aws_lb_listener.app, aws_lb_listener.https]
   network_configuration {
     subnets          = var.private_subnet_ids
     security_groups  = [aws_security_group.tasks.id]

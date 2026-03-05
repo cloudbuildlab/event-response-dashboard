@@ -24,6 +24,11 @@ output "rds_database_name" {
   value       = aws_db_instance.this.db_name
 }
 
+output "rds_password_ssm_name" {
+  description = "SSM parameter name for RDS password (use with get-parameter to connect)."
+  value       = aws_ssm_parameter.rds_password.name
+}
+
 output "s3_bucket_name" {
   description = "Name of the managed S3 bucket."
   value       = aws_s3_bucket.app.id
